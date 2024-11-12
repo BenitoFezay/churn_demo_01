@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plotly.express as px
+# import plotly.express as px
 
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
@@ -256,7 +256,10 @@ def churn_prediction_by_uploading_file(df_uploaded):
               st.write(df_uploaded.head(3))
               # shape of date
               st.write(f"Data size: {df_uploaded.shape[0]}")
-       
+              # Remove columns not in the list
+              df_churn = df_uploaded[[col for col in column_list if col in df_uploaded.columns]]
+              df_churn
+
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        st.write("#### File uploader")
