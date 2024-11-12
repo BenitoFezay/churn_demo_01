@@ -246,22 +246,21 @@ def make_visualization(data):
     st.bar_chart(chart_data)
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
-    st.write("#### File uploader")
-    df_uploaded = st.file_uploader(label="Upload the dataset here.")
-    if df_uploaded:
-        if get_file_extension(df_uploaded) == ".csv":
-            df_uploaded = pd.read_csv(df_uploaded)
-            df_uploaded
-              # make visualization of this data
-            # make_visualization(df_uploaded)
-
-        elif get_file_extension(df_uploaded) == ".xlsx":
-            df_uploaded = pd.read_excel(df_uploaded)
-            df_uploaded
-               # make visualization of this data
-            # make_visualization(df_uploaded)
-        else:
-            st.error("#### Make sure that you had uploaded csv or excel file")
+       st.write("#### File uploader")
+       df_uploaded = st.file_uploader(label="Upload the dataset here.")
+       if df_uploaded:
+               if get_file_extension(df_uploaded) == ".csv":
+                      df_uploaded = pd.read_csv(df_uploaded)
+                      st.write(df_uploaded.head(3))
+                     # shape of date
+                     st.write(f"Data size: {df_uploaded.shape[0]}")
+               elif get_file_extension(df_uploaded) == ".xlsx":
+                     df_uploaded = pd.read_excel(df_uploaded)
+                     st.write(df_uploaded.head(3))
+                     # shape of date
+                     st.write(f"Data size: {df_uploaded.shape[0]}")
+               else:
+                     st.error("#### Make sure that you had uploaded csv or excel file")
 
 
 
