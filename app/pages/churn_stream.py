@@ -252,8 +252,8 @@ with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
                if get_file_extension(df_uploaded) == ".csv":
                       df_uploaded = pd.read_csv(df_uploaded)
                       st.write(df_uploaded.head(3))
-                     # shape of date
-                     st.write(f"Data size: {df_uploaded.shape[0]}")
+                      # shape of date
+                      st.write(f"Data size: {df_uploaded.shape[0]}")
                elif get_file_extension(df_uploaded) == ".xlsx":
                      df_uploaded = pd.read_excel(df_uploaded)
                      st.write(df_uploaded.head(3))
