@@ -257,7 +257,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
               # shape of date
               st.write(f"Data size: {df_uploaded.shape[0]}")
               # Remove columns not in the list
-              df_churn = df_uploaded[[col for col in column_list if col in df_uploaded.columns]]
+              df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
               df_churn
 
 
