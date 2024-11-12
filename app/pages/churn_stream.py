@@ -258,6 +258,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
               st.write(f"Data size: {df_uploaded.shape[0]}")
               # Remove columns not in the list
               df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
+              making_scaler_standardscaler(df_churn)
               df_churn
 
 
