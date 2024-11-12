@@ -239,7 +239,7 @@ def get_file_extension(file_path):
     return f"{extension}"
 
 # Visualization
-from bokeh.plotting import figure
+# from bokeh.plotting import figure
 def make_visualization(data):
     making_scaler_standardscaler(data)
     p = figure(title="Montant de transaction par ville", x_axis_label="Ville", y_axis_label="Montant Transaction")
