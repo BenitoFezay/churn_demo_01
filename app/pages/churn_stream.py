@@ -225,7 +225,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
 
 
 # --------------------------------
-# 22- Churn prediction by uploading csv file
+# 14- Churn prediction by uploading csv file
 import os
 
 def get_file_extension(file_path):
@@ -233,7 +233,6 @@ def get_file_extension(file_path):
     return f"{extension}"
 
 # Visualization
-# from bokeh.plotting import figure
 def make_visualization(data):
     making_scaler_standardscaler(data)
     p = figure(title="Montant de transaction par ville", x_axis_label="Ville", y_axis_label="Montant Transaction")
@@ -245,25 +244,35 @@ def make_visualization(data):
     # st.bokeh_chart(p, use_container_width=True)
     st.bar_chart(chart_data)
 
+# Function: churn prediction 
+def churn_prediction_by_uploading_file(df_uploaded):
+       columns = ['TypeCompte', 'MontantTrans', 'TypeTransaction', 'ScoreCSAT', 'ScoreNPS', 'StatusCompte', 'AgeCompte (j)', 'AgeClient', 'Ville', 'MontantPret', 'TauxInteret', 'TypeEngagement']
+       # Virify whether all columns in column_list are present in the dataset
+       missing_columns = [col for col in columns if col not in df_uploaded.columns]
+       if missing_columns:
+              st.error(f"The following columns are missing in the dataset: {missing_columns}")
+       else:
+              st.write(df_uploaded.head(3))
+              # shape of date
+              st.write(f"Data size: {df_uploaded.shape[0]}")
+              st.write("All columns in the column list are present in the dataset.")
+       
+
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        st.write("#### File uploader")
        df_uploaded = st.file_uploader(label="Upload the dataset here.")
        if df_uploaded:
                if get_file_extension(df_uploaded) == ".csv":
-                      df_uploaded = pd.read_csv(df_uploaded)
-                      st.write(df_uploaded.head(3))
-                      # shape of date
-                      st.write(f"Data size: {df_uploaded.shape[0]}")
+                     df_uploaded = pd.read_csv(df_uploaded)
+                     churn_prediction_by_uploading_file(df_uploaded)
                elif get_file_extension(df_uploaded) == ".xlsx":
                      df_uploaded = pd.read_excel(df_uploaded)
-                     st.write(df_uploaded.head(3))
-                     # shape of date
-                     st.write(f"Data size: {df_uploaded.shape[0]}")
+                     churn_prediction_by_uploading_file(df_uploaded)
+                     
                else:
                      st.error("#### Make sure that you had uploaded csv or excel file")
 
 
 
-# ------------------------------
-# **- Display prediction
+
    
