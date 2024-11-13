@@ -278,7 +278,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                                    prediction = churn_model.predict([new_data])
                                    prediction_results.append(prediction)
                                    
-                            st.write(prediction_results)
+                            st.write(np.array(prediction_results))
                             # df_pred = pd.DataFrame({'Prediction': prediction_results})
                             # #Create a new column 'Classification' based on the 'Prediction' column
                             # df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
