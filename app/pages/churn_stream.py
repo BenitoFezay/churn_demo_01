@@ -21,7 +21,9 @@ import pickle
 # 1- Encoding the data using labelencoder
 def make_encoding_labelencoder(df, columns):
        label_encoder = LabelEncoder()
-       df[columns] = label_encoder.fit_transform(df[columns])
+       for col in columns:
+              df[col] = label_encoder.fit_transform(df[col])
+       return df
 
 # -------------------------------
 # 2- Scalling data with StandardScaler
@@ -265,7 +267,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
               # Remove columns not in the list
               df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
               # Encoding the data using labelencoder
-              make_encoding_labelencoder(df_churn, columns_to_encoded)
+              df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
               # Scaling the data using standardscaler
               making_scaler_standardscaler(df_churn)
               df_churn
