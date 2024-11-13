@@ -283,8 +283,8 @@ def churn_prediction_by_uploading_file(df_uploaded):
                             df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
                             # Count the occurrences of each classification
                             classification_counts = df_pred['Classification'].value_counts()
-                            classification_counts = pd.DataFrame(classification_counts)
-                            st.bar_chart(classification_counts, x="Classification", y="count")
+                            st.write(classification_counts.columns)
+                            # st.bar_chart(classification_counts, x="Classification", y="count")
                      
                      except ValueError as e:
                             st.error(f"Prediction error: {e}")
