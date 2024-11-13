@@ -280,7 +280,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                                    
                             df_pred = pd.DataFrame({'Prediction': np.array(prediction_results)})
                             # Create a new column 'Classification' based on the 'Prediction' column
-                            df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
+                            # df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
                             # Count the occurrences of each classification
                             # classification_counts = df_pred['Classification'].value_counts()
                             df_pred
