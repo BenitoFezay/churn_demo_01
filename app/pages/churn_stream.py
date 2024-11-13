@@ -30,47 +30,44 @@ def make_encoding_labelencoder(df, columns):
 from sklearn.preprocessing import StandardScaler
 
 scaler = StandardScaler()
-columns = ['MontantTrans', 'ScoreCSAT',
-       'ScoreNPS', 'AgeCompte (j)', 'AgeClient',
-       'MontantPret', 'TauxInteret'
-       ]
-
+columns = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
 def making_scaler_standardscaler(df):
-    df[columns] = scaler.fit_transform(df[columns])
+       df[columns] = scaler.fit_transform(df[columns])
+       return df
 
 # --------------------------------
-# 3- SPLITTING THE DATA
-# 3.1- RESAMPLING 
-from imblearn.over_sampling import SMOTE
-smote = SMOTE()
+# # 3- SPLITTING THE DATA
+# # 3.1- RESAMPLING 
+# from imblearn.over_sampling import SMOTE
+# smote = SMOTE()
 
-# 3.2- Using train and test split
-from sklearn.model_selection import train_test_split
+# # 3.2- Using train and test split
+# from sklearn.model_selection import train_test_split
 
-# -------------------------------
-# 4- CREATE MODEL
-from sklearn.linear_model import LogisticRegression
+# # -------------------------------
+# # 4- CREATE MODEL
+# from sklearn.linear_model import LogisticRegression
 
-# -------------------------------
-# 5- ACCURACY
-import sklearn.metrics as sm
+# # -------------------------------
+# # 5- ACCURACY
+# import sklearn.metrics as sm
 
-# ------------------------------
-# 6- CONFUSION-MATRIX
-from sklearn.metrics import confusion_matrix as cm
+# # ------------------------------
+# # 6- CONFUSION-MATRIX
+# from sklearn.metrics import confusion_matrix as cm
 
-# ------------------------------
-# 7- CLASSIFICATION_REPORT
-from sklearn.metrics import classification_report as cr
+# # ------------------------------
+# # 7- CLASSIFICATION_REPORT
+# from sklearn.metrics import classification_report as cr
 
-# ------------------------------
-# 8- CROSS VALIDATION
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+# # ------------------------------
+# # 8- CROSS VALIDATION
+# from sklearn.model_selection import cross_val_score, StratifiedKFold
 
-# ------------------------------
-# 9- BOOSTING MODEL
-from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score
+# # ------------------------------
+# # 9- BOOSTING MODEL
+# from xgboost import XGBClassifier
+# from sklearn.metrics import accuracy_score
 
 # -------------------------------
 # 10- SAVING MODEL
@@ -271,7 +268,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      # Encoding the data using labelencoder
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
-                     making_scaler_standardscaler(df_churn)
+                     df_churn = making_scaler_standardscaler(df_churn)
                      # make prediction
                      try:
                              prediction = churn_model.predict(df_churn[0:101:2])
