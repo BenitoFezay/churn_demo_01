@@ -278,11 +278,12 @@ def churn_prediction_by_uploading_file(df_uploaded):
                                    prediction = churn_model.predict([new_data])
                                    prediction_results.append(prediction)
                                    
-                            df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()},)
+                            df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()})
                             # Create a new column 'Classification' based on the 'Prediction' column
                             df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
                             # Count the occurrences of each classification
                             classification_counts = df_pred['Classification'].value_counts()
+                            classification_counts = pd.DataFrame(classification_counts, as_index=False)
                             st.bar_chart(classification_counts, x="Classification", y="count")
                      
                      except ValueError as e:
