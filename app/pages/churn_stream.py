@@ -295,7 +295,6 @@ def prepare_data(df_uploaded):
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
-                     df_churn = df_churn[0:120]
                      # make prediction
                      making_prediction(df_churn)
     
