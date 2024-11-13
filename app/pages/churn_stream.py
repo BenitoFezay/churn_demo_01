@@ -267,17 +267,19 @@ def making_prediction(df_churn):
        except Exception as e:
               st.error(f"An unexpected error occurred: {e}")
 
-       
+
+# ----------------------------------
+# columns to be scaling
+columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
+# columns to be encoded
+columns_to_encoded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
+# all columns
+all_columns = columns_to_scaled + columns_to_encoded
+
 # Function: prepare data to churn prediction 
 def prepare_data(df_uploaded):
-       # columns to be scaling
-       columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
-       # columns to be encoded
-       columns_to_encoded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
-       # all columns
-       columns = columns_to_scaled + columns_to_encoded
        # Virify whether all columns in column_list are present in the dataset
-       missing_columns = [col for col in columns if col not in df_uploaded.columns]
+       missing_columns = [col for col in all_columns if col not in df_uploaded.columns]
        if missing_columns:
               st.error(f"The following columns are missing in the dataset: {missing_columns}")
        else:
@@ -288,7 +290,7 @@ def prepare_data(df_uploaded):
               # accept the prediction whether the dataset'size is more than 1
               if df_uploaded.shape[0] > 1 :
                      # Remove columns not in the list
-                     df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
+                     df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
                      # Encoding the data using labelencoder
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
@@ -300,7 +302,7 @@ def prepare_data(df_uploaded):
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        st.write("#### File uploader")
-       df_uploaded = st.file_uploader(label="Upload the dataset here.")
+       df_uploaded = st.file_uploader(label=f"Upload the dataset here {all_columns}.")
        if df_uploaded:
                if get_file_extension(df_uploaded) == ".csv":
                      df_uploaded = pd.read_csv(df_uploaded)
