@@ -17,11 +17,11 @@ import math
 # PICKEL
 import pickle
 
-# ---------------------------------
-# 1- ENOCDING "Churn"
-label_encoder = LabelEncoder()
-# df_churn["Churn"] = label_encoder.fit_transform(df_churn[["Churn"]])
-
+# -------------------------------------
+# 1- Encoding the data using labelencoder
+def make_encoding_labelencoder(df, columns):
+       label_encoder = LabelEncoder()
+       df[columns] = label_encoder.fit_transform(df_churn[columns])
 
 # -------------------------------
 # 2- Scalling data with StandardScaler
@@ -245,9 +245,15 @@ def make_visualization(data):
     # st.bokeh_chart(p, use_container_width=True)
     st.bar_chart(chart_data)
 
+       
 # Function: churn prediction 
 def churn_prediction_by_uploading_file(df_uploaded):
-       columns = ['TypeCompte', 'MontantTrans', 'TypeTransaction', 'ScoreCSAT', 'ScoreNPS', 'StatusCompte', 'AgeCompte (j)', 'AgeClient', 'Ville', 'MontantPret', 'TauxInteret', 'TypeEngagement']
+       # columns to be scaling
+       columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
+       # columns to be encoded
+       columns_to_enconded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
+       # all columns
+       columns = columns_to_scaled + columns_to_encoded
        # Virify whether all columns in column_list are present in the dataset
        missing_columns = [col for col in columns if col not in df_uploaded.columns]
        if missing_columns:
@@ -258,6 +264,9 @@ def churn_prediction_by_uploading_file(df_uploaded):
               st.write(f"Data size: {df_uploaded.shape[0]}")
               # Remove columns not in the list
               df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
+              # Encoding the data using labelencoder
+              make_encoding_labelencoder(df_churn, columns_to_encoded)
+              # Scaling the data using standardscaler
               making_scaler_standardscaler(df_churn)
               df_churn
 
