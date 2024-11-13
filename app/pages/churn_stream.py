@@ -264,13 +264,23 @@ def churn_prediction_by_uploading_file(df_uploaded):
               st.write(df_uploaded.head(3))
               # shape of date
               st.write(f"Data size: {df_uploaded.shape[0]}")
-              # Remove columns not in the list
-              df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
-              # Encoding the data using labelencoder
-              df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
-              # Scaling the data using standardscaler
-              making_scaler_standardscaler(df_churn)
-              df_churn
+              # accept the prediction whether the dataset'size is more than 1
+              if df_uploaded.shape[0] > 1 :
+                     # Remove columns not in the list
+                     df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
+                     # Encoding the data using labelencoder
+                     df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
+                     # Scaling the data using standardscaler
+                     making_scaler_standardscaler(df_churn)
+                     # make prediction
+                     prediction = churn_model.predict(data)
+                     df_pred = pd.DataFrame({'Prediction': prediction})
+                     # Create a new column 'Classification' based on the 'Prediction' column
+                     df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
+                     # Count the occurrences of each classification
+                     classification_counts = df_pred['Classification'].value_counts()
+                     
+                     classification_counts
 
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
