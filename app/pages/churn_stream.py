@@ -21,7 +21,7 @@ import pickle
 # 1- Encoding the data using labelencoder
 def make_encoding_labelencoder(df, columns):
        label_encoder = LabelEncoder()
-       df[columns] = label_encoder.fit_transform(df_churn[columns])
+       df[columns] = label_encoder.fit_transform(df[columns])
 
 # -------------------------------
 # 2- Scalling data with StandardScaler
