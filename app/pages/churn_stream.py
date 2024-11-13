@@ -282,7 +282,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                             # Create a new column 'Classification' based on the 'Prediction' column
                             df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
                             # Count the occurrences of each classification
-                            st.write(df_pred["Classification"].value_counts().plot.pie(autopct='%.2f%%', figsize=(6,6)))
+                            df_pred["Classification"].value_counts().plot.pie(autopct='%.2f%%', figsize=(6,6))
                             # classification_counts = df_pred['Classification'].value_counts()
                             # classification_counts
                      
