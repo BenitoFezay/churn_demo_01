@@ -271,7 +271,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      df_churn = making_scaler_standardscaler(df_churn)
                      # make prediction
                      try:
-                             prediction = churn_model.predict(df_churn[0:101][0])
+                            prediction = churn_model.predict(df_churn[0:101][0])
                             df_pred = pd.DataFrame({'Prediction': prediction})
                             # Create a new column 'Classification' based on the 'Prediction' column
                             df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
