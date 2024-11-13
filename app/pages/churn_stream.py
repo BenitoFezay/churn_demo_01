@@ -302,7 +302,7 @@ def prepare_data(df_uploaded):
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        st.write("#### File uploader")
-       df_uploaded = st.file_uploader(label=f"Upload the dataset here {all_columns}.")
+       df_uploaded = st.file_uploader(label=f"Upload the dataset here the dataset should have these columns {all_columns}.")
        if df_uploaded:
                if get_file_extension(df_uploaded) == ".csv":
                      df_uploaded = pd.read_csv(df_uploaded)
