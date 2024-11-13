@@ -272,7 +272,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      st.write(df_churn)
                      # make prediction
                      try:
-                             prediction = churn_model.predict(df_churn[0:101:2])
+                             prediction = churn_model.predict(df_churn[0:101:2][0])
                      except ValueError as e:
                             st.error(f"Prediction error: {e}")
                      except Exception as e:
