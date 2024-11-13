@@ -197,9 +197,9 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                        'TauxInteret': {"mean": 0.495658, "std":0.499983}}
               
                # with st.expander('Input features'):
-               st.write('**Input data before scalling**')
+               # st.write('**Input data before scalling**')
                input_df = df.copy()
-               input_df
+               # input_df
                
               
               
@@ -216,10 +216,6 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                    return df
               
                manual_standardize(input_df, columns=columns)
-              
-               # input_penguins = pd.concat([input_df, X_test], axis=0)
-               st.write('**Input data after scalling**')
-               input_df
               
                testing_model_by_ilocation(data=input_df)
 
@@ -241,7 +237,6 @@ def make_visualization(data):
     Y_data = data["MontantTrans"]
     p.line(X_data, Y_data, legend_label="Trend", line_width=2)
     chart_data = data["MontantTrans"]
-    # st.bokeh_chart(p, use_container_width=True)
     st.bar_chart(chart_data)
 
 def making_prediction(df_churn):
@@ -298,6 +293,7 @@ def prepare_data(df_uploaded):
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
+                     df_churn = df_churn[0:120]
                      # make prediction
                      making_prediction(df_churn)
     
