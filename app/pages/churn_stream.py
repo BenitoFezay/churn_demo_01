@@ -266,27 +266,24 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      # Remove columns not in the list
                      df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
                      # Encoding the data using labelencoder
-                     # df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded) --------
+                     df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
-                     st.write(df_churn)
                      # make prediction
-                     # try:
-                     #         prediction = churn_model.predict(df_churn[0:101:2][0])
-                     # except ValueError as e:
-                     #        st.error(f"Prediction error: {e}")
-                     # except Exception as e:
-                     #        st.error(f"An unexpected error occurred: {e}")
-    
-                     prediction = churn_model.predict(df_churn[0:101][0])
-                     df_pred = pd.DataFrame({'Prediction': prediction})
-                     # Create a new column 'Classification' based on the 'Prediction' column
-                     df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
-                     # Count the occurrences of each classification
-                     classification_counts = df_pred['Classification'].value_counts()
+                     try:
+                             prediction = churn_model.predict(df_churn[0:101][0])
+                            df_pred = pd.DataFrame({'Prediction': prediction})
+                            # Create a new column 'Classification' based on the 'Prediction' column
+                            df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
+                            # Count the occurrences of each classification
+                            classification_counts = df_pred['Classification'].value_counts()
+                            classification_counts
                      
-                     classification_counts
-
+                     except ValueError as e:
+                            st.error(f"Prediction error: {e}")
+                     except Exception as e:
+                            st.error(f"An unexpected error occurred: {e}")
+    
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        st.write("#### File uploader")
