@@ -266,7 +266,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      # Remove columns not in the list
                      df_churn = df_uploaded[[col for col in columns if col in df_uploaded.columns]]
                      # Encoding the data using labelencoder
-                     df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
+                     # df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded) --------
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
                      st.write(df_churn)
