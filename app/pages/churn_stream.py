@@ -272,7 +272,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      # make prediction
                      try:
                             prediction_results = []
-                            for i in range(0, df_churn.shape):
+                            for i in range(0, int(df_churn.shape[0])):
                                    new_data = df_churn.iloc[i]
                                    prediction = churn_model.predict([new_data])
                                    prediction_results.append(prediction)
