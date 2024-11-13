@@ -269,6 +269,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
+                     df_churn = df_churn[100:151]
                      # make prediction
                      try:
                             prediction_results = []
@@ -276,6 +277,8 @@ def churn_prediction_by_uploading_file(df_uploaded):
                                    new_data = df_churn.iloc[i]
                                    prediction = churn_model.predict([new_data])
                                    prediction_results.append(prediction)
+                                   st.info(f'***Prediction number {i}***')
+                            
                             df_pred = pd.DataFrame({'Prediction': prediction_results})
                             # Create a new column 'Classification' based on the 'Prediction' column
                             df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
