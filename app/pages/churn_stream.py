@@ -284,8 +284,12 @@ def churn_prediction_by_uploading_file(df_uploaded):
                             # Count the occurrences of each classification
                             classification_counts = df_pred['Classification'].value_counts()
                             classification_counts = pd.DataFrame(classification_counts)
-                            st.write(classification_counts["count"])
-                            st.bar_chart(classification_counts)
+                            
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                   st.write(classification_counts["count"])
+                            with col2:
+                                   st.bar_chart(classification_counts)
                      
                      except ValueError as e:
                             st.error(f"Prediction error: {e}")
