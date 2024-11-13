@@ -251,7 +251,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
        # columns to be scaling
        columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
        # columns to be encoded
-       columns_to_enconded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
+       columns_to_encoded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
        # all columns
        columns = columns_to_scaled + columns_to_encoded
        # Virify whether all columns in column_list are present in the dataset
