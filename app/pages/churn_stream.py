@@ -269,6 +269,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
+                     st.write(df_churn)
                      # make prediction
                      try:
                              prediction = churn_model.predict(df_churn[0:101:2])
