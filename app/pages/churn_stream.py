@@ -271,9 +271,12 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      df_churn = making_scaler_standardscaler(df_churn)
                      # make prediction
                      try:
-                            new_data = df_churn.iloc[0]
-                            prediction = churn_model.predict([new_data])
-                            df_pred = pd.DataFrame({'Prediction': prediction})
+                            prediction_results = []
+                            for i in range(0, df_churn.shape):
+                                   new_data = df_churn.iloc[i]
+                                   prediction = churn_model.predict([new_data])
+                                   prediction_results.append(prediction)
+                            df_pred = pd.DataFrame({'Prediction': prediction_results})
                             # Create a new column 'Classification' based on the 'Prediction' column
                             df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
                             # Count the occurrences of each classification
