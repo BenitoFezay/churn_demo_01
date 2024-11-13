@@ -274,7 +274,7 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      making_scaler_standardscaler(df_churn)
                      # make prediction
                      try:
-                             prediction = churn_model.predict(df_churn)
+                             prediction = churn_model.predict(df_churn[0:101:2])
                      except ValueError as e:
                             st.error(f"Prediction error: {e}")
                      except Exception as e:
