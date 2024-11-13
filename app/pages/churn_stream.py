@@ -244,9 +244,37 @@ def make_visualization(data):
     # st.bokeh_chart(p, use_container_width=True)
     st.bar_chart(chart_data)
 
+def making_prediction(df_churn):
+       try:
+              prediction_results = []
+              for i in range(0, int(df_churn.shape[0])):
+                     new_data = df_churn.iloc[i]
+                     prediction = churn_model.predict([new_data])
+                     prediction_results.append(prediction)
+                     
+              df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()})
+              # Create a new column 'Classification' based on the 'Prediction' column
+              df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
+              # Count the occurrences of each classification
+              classification_counts = df_pred['Classification'].value_counts()
+              classification_counts = pd.DataFrame(classification_counts)
+
+              # ------------------------
+              # Result
+              col1, col2 = st.columns(2)
+              with col1:
+                     st.write(classification_counts["count"])
+              with col2:
+                     st.bar_chart(classification_counts)
        
-# Function: churn prediction 
-def churn_prediction_by_uploading_file(df_uploaded):
+       except ValueError as e:
+              st.error(f"Prediction error: {e}")
+       except Exception as e:
+              st.error(f"An unexpected error occurred: {e}")
+
+       
+# Function: prepare data to churn prediction 
+def prepare_data(df_uploaded):
        # columns to be scaling
        columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
        # columns to be encoded
@@ -260,7 +288,8 @@ def churn_prediction_by_uploading_file(df_uploaded):
        else:
               st.write(df_uploaded.head(3))
               # shape of date
-              st.write(f"Data size: {df_uploaded.shape[0]}")
+              st.write(f"**Data size**: {df_uploaded.shape[0]}")
+              st.wite("### Result of Churn prediction")
               # accept the prediction whether the dataset'size is more than 1
               if df_uploaded.shape[0] > 1 :
                      # Remove columns not in the list
@@ -269,32 +298,8 @@ def churn_prediction_by_uploading_file(df_uploaded):
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
                      df_churn = making_scaler_standardscaler(df_churn)
-                     df_churn = df_churn[100:151]
                      # make prediction
-                     try:
-                            prediction_results = []
-                            for i in range(0, int(df_churn.shape[0])):
-                                   new_data = df_churn.iloc[i]
-                                   prediction = churn_model.predict([new_data])
-                                   prediction_results.append(prediction)
-                                   
-                            df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()})
-                            # Create a new column 'Classification' based on the 'Prediction' column
-                            df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
-                            # Count the occurrences of each classification
-                            classification_counts = df_pred['Classification'].value_counts()
-                            classification_counts = pd.DataFrame(classification_counts)
-                            
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                   st.write(classification_counts["count"])
-                            with col2:
-                                   st.bar_chart(classification_counts)
-                     
-                     except ValueError as e:
-                            st.error(f"Prediction error: {e}")
-                     except Exception as e:
-                            st.error(f"An unexpected error occurred: {e}")
+                     making_prediction(df_churn)
     
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
@@ -303,10 +308,10 @@ with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        if df_uploaded:
                if get_file_extension(df_uploaded) == ".csv":
                      df_uploaded = pd.read_csv(df_uploaded)
-                     churn_prediction_by_uploading_file(df_uploaded)
+                     prepare_data(df_uploaded)
                elif get_file_extension(df_uploaded) == ".xlsx":
                      df_uploaded = pd.read_excel(df_uploaded)
-                     churn_prediction_by_uploading_file(df_uploaded)
+                     prepare_data(df_uploaded)
                      
                else:
                      st.error("#### Make sure you had uploaded csv or excel file")
