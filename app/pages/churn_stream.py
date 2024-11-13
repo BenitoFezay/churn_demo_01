@@ -289,7 +289,7 @@ def prepare_data(df_uploaded):
               st.write(df_uploaded.head(3))
               # shape of date
               st.write(f"**Data size**: {df_uploaded.shape[0]}")
-              st.wite("### Result of Churn prediction")
+              st.header("Result of Churn prediction", divider=True)
               # accept the prediction whether the dataset'size is more than 1
               if df_uploaded.shape[0] > 1 :
                      # Remove columns not in the list
