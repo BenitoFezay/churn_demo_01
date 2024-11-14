@@ -91,6 +91,15 @@ def testing_model_by_ilocation(data):
         # st.write(new_data)
         return st.success("This Client is a loyal")
 
+# -----------------------------
+# Manual standardscaler
+def manual_standardize(df, columns):
+     for col, stats in columns.items():
+         mean = stats["mean"]
+         std = stats["std"]
+         # Standardiser la colonne en utilisant la formule
+         df[col] = (np.array(df) - mean) / std
+     return df
 
 # ------------------------------
 st.title("🤖 Machine Learning")
@@ -200,21 +209,6 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                # st.write('**Input data before scalling**')
                input_df = df.copy()
                # input_df
-               
-              
-              
-               # scaler = StandardScaler()
-               data = np.array(input_df)
-               # input_df[columns] = scaler.fit_transform(input_df[columns])
-              
-               def manual_standardize(df, columns):
-                   for col, stats in columns.items():
-                       mean = stats["mean"]
-                       std = stats["std"]
-                       # Standardiser la colonne en utilisant la formule
-                       df[col] = (data - mean) / std
-                   return df
-              
                input_df = manual_standardize(input_df, columns=columns_params)
               
                testing_model_by_ilocation(data=input_df)
