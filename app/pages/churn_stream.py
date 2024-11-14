@@ -135,7 +135,7 @@ def make_data_encoded(data):
 
 
 # Scalling input data
-columns = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
+columns_params = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
          'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
          'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
          'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
@@ -215,7 +215,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                        df[col] = (data - mean) / std
                    return df
               
-               input_df = manual_standardize(input_df, columns=columns)
+               input_df = manual_standardize(input_df, columns=columns_params)
               
                testing_model_by_ilocation(data=input_df)
 
@@ -289,16 +289,19 @@ def prepare_data(df_uploaded):
               st.write(f"**Data size**: {df_uploaded.shape[0]}")
               st.header("Result of Churn prediction", divider=True)
               # accept the prediction whether the dataset'size is more than 1
-              if df_uploaded.shape[0] < 0 :
+              if df_uploaded.shape[0] < 2 and  df_uploaded.shape[0] > 0:
                      # Remove columns not in the list
                      df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
                      # Encoding the data using labelencoder
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
-                     # Scaling the data using standardscaler
-                     df_churn = manual_standardize(df_churn, columns=columns)
                      df_churn = df_churn[0:2]
-                     # make prediction
-                     making_prediction(df_churn)
+                     # Scaling the data using standardscaler
+                     df_churn = manual_standardize(df_churn, columns=columns_params)
+                     try:
+                            # make prediction
+                            making_prediction(df_churn)
+                     except:
+                            st.write("304- There is an error")
     
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
