@@ -294,7 +294,7 @@ def prepare_data(df_uploaded):
                      df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
                      # Encoding the data using labelencoder
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
-                     df_churn = df_churn[0:2]
+                     df_churn = df_churn[0]
                      # Scaling the data using standardscaler
                      df_churn = manual_standardize(df_churn, columns=columns_params)
                      try:
