@@ -214,6 +214,49 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                testing_model_by_ilocation(data=input_df)
 
 
+import numpy as np
+
+class ManualStandardScaler:
+    def __init__(self, mean=None, std=None, with_mean=True, with_std=True):
+        self.with_mean = with_mean  # Option to center the data
+        self.with_std = with_std    # Option to scale to unit variance
+        self.mean = mean            # Custom mean value
+        self.std = std              # Custom standard deviation value
+        self.mean_ = None
+        self.std_ = None
+
+    def fit(self, data):
+        # Use provided mean and std if specified, otherwise compute from data
+        if self.mean is not None:
+            self.mean_ = np.array(self.mean)
+        elif self.with_mean:
+            self.mean_ = np.mean(data, axis=0)
+        else:
+            self.mean_ = np.zeros(data.shape[1])
+
+        if self.std is not None:
+            self.std_ = np.array(self.std)
+        elif self.with_std:
+            self.std_ = np.std(data, axis=0)
+            self.std_[self.std_ == 0] = 1  # Avoid division by zero
+        else:
+            self.std_ = np.ones(data.shape[1])
+
+    def transform(self, data):
+        # Scale the data based on provided or computed mean and std
+        return (data - self.mean_) / self.std_
+
+    def fit_transform(self, data):
+        self.fit(data)
+        return self.transform(data)
+
+# Example usage
+data = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])  # Sample dataset
+
+# Use custom mean and std values
+scaler = ManualStandardScaler(mean=[4, 5, 6], std=[2, 2, 2])
+scaled_data = scaler.fit_transform(data)
+
 
 # --------------------------------
 # 14- Churn prediction by uploading csv file
@@ -290,8 +333,8 @@ def prepare_data(df_uploaded):
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      df_churn = df_churn[0:3]
                      # Scaling the data using standardscaler
-                     df_churn = manual_standardize(df_churn, columns=columns_params)
                      try:
+                            df_churn = manual_standardize(df_churn, columns=columns_params)
                             # make prediction
                             making_prediction(df_churn)
                      except:
