@@ -135,8 +135,7 @@ def make_data_encoded(data):
 
 
 # Scalling input data
- from sklearn.preprocessing import StandardScaler
- columns = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
+columns = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
          'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
          'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
          'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
