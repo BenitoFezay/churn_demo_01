@@ -133,6 +133,17 @@ def make_data_encoded(data):
         if data["Ville"] == ville:
             data["Ville"] = i
 
+
+# Scalling input data
+ from sklearn.preprocessing import StandardScaler
+ columns = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
+         'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
+         'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
+         'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
+         'AgeClient':{"mean":4.693210, "std":3.337875}, 
+         'MontantPret': {"mean":0.502908, "std":0.572779}, 
+         'TauxInteret': {"mean": 0.495658, "std":0.499983}}
+
 # 13- Fields for churn prediction
 with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
        
@@ -186,16 +197,6 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
               
               if submit_button:
                df = pd.DataFrame(data, index=[0])
-               # Scalling input data
-               from sklearn.preprocessing import StandardScaler
-               columns = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
-                       'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
-                       'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
-                       'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
-                       'AgeClient':{"mean":4.693210, "std":3.337875}, 
-                       'MontantPret': {"mean":0.502908, "std":0.572779}, 
-                       'TauxInteret': {"mean": 0.495658, "std":0.499983}}
-              
                # with st.expander('Input features'):
                # st.write('**Input data before scalling**')
                input_df = df.copy()
@@ -218,6 +219,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                manual_standardize(input_df, columns=columns)
               
                testing_model_by_ilocation(data=input_df)
+
 
 
 # --------------------------------
