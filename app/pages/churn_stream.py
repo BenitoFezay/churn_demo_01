@@ -288,7 +288,7 @@ def prepare_data(df_uploaded):
               st.write(f"**Data size**: {df_uploaded.shape[0]}")
               st.header("Result of Churn prediction", divider=True)
               # accept the prediction whether the dataset'size is more than 1
-              if df_uploaded.shape[0] > 1 :
+              if df_uploaded.shape[0] < 0 :
                      # Remove columns not in the list
                      df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
                      # Encoding the data using labelencoder
