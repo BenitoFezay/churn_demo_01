@@ -215,7 +215,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                        df[col] = (data - mean) / std
                    return df
               
-               manual_standardize(input_df, columns=columns)
+               input_df = manual_standardize(input_df, columns=columns)
               
                testing_model_by_ilocation(data=input_df)
 
@@ -295,8 +295,8 @@ def prepare_data(df_uploaded):
                      # Encoding the data using labelencoder
                      df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
                      # Scaling the data using standardscaler
-                     df_churn = making_scaler_standardscaler(df_churn)
-                     df_churn = df_churn[0:100]
+                     df_churn = manual_standardize(df_churn, columns=columns)
+                     df_churn = df_churn[0:2]
                      # make prediction
                      making_prediction(df_churn)
     
