@@ -1,24 +1,46 @@
 # -------------------------------------------------------------------
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 # import plotly.express as px
 
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # STREMLIT APP
 import streamlit as st
-import pandas as pd
 import matplotlib.pyplot as plt
-import math
 
 # PICKEL
 import pickle
 
+
+
+# ------------------------------------- 
+#         V A R I A B L E S
 # -------------------------------------
-# 1- Encoding the data using labelencoder
+# Scalling input data
+columns_params = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
+         'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
+         'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
+         'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
+         'AgeClient':{"mean":4.693210, "std":3.337875}, 
+         'MontantPret': {"mean":0.502908, "std":0.572779}, 
+         'TauxInteret': {"mean": 0.495658, "std":0.499983}}
+
+# -------------------------------------
+# columns to be scaling
+columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
+# columns to be encoded
+columns_to_encoded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
+# all columns
+all_columns = columns_to_scaled + columns_to_encoded
+
+# ------------------------------------- 
+#          II- F U N C T I O N S
+# -------------------------------------
+# 1.1- Encoding the data using labelencoder
 def make_encoding_labelencoder(df, columns):
        label_encoder = LabelEncoder()
        for col in columns:
@@ -26,59 +48,16 @@ def make_encoding_labelencoder(df, columns):
        return df
 
 # -------------------------------
-# 2- Scalling data with StandardScaler
-from sklearn.preprocessing import StandardScaler
-
+# 1.2- Scalling data with StandardScaler
 scaler = StandardScaler()
 columns = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
 def making_scaler_standardscaler(df):
        df[columns] = scaler.fit_transform(df[columns])
        return df
 
-# --------------------------------
-# # 3- SPLITTING THE DATA
-# # 3.1- RESAMPLING 
-# from imblearn.over_sampling import SMOTE
-# smote = SMOTE()
-
-# # 3.2- Using train and test split
-# from sklearn.model_selection import train_test_split
-
-# # -------------------------------
-# # 4- CREATE MODEL
-# from sklearn.linear_model import LogisticRegression
-
-# # -------------------------------
-# # 5- ACCURACY
-# import sklearn.metrics as sm
-
-# # ------------------------------
-# # 6- CONFUSION-MATRIX
-# from sklearn.metrics import confusion_matrix as cm
-
-# # ------------------------------
-# # 7- CLASSIFICATION_REPORT
-# from sklearn.metrics import classification_report as cr
-
-# # ------------------------------
-# # 8- CROSS VALIDATION
-# from sklearn.model_selection import cross_val_score, StratifiedKFold
-
-# # ------------------------------
-# # 9- BOOSTING MODEL
-# from xgboost import XGBClassifier
-# from sklearn.metrics import accuracy_score
 
 # -------------------------------
-# 10- SAVING MODEL
-model_path = './model/churn_model.pkl'
-
-# To load the model later:
-churn_model = pickle.load(open(model_path, 'rb'))
-
-
-# -------------------------------
-# 11- TESTING THE MODEL
+# 1.3- TESTING THE MODEL
 def testing_model_by_ilocation(data):
     # new_data = X_test.iloc[data]  # Example: Use the first row of X_test for testing
     prediction = churn_model.predict(data)
@@ -86,13 +65,13 @@ def testing_model_by_ilocation(data):
 
     if f"{prediction}" == "[1]":
         # st.write(new_data)
-        return st.error("This Client is a churner")
+        return st.error("This Client is churner")
     else:
         # st.write(new_data)
-        return st.success("This Client is a loyal")
+        return st.success("This Client is loyal")
 
 # -----------------------------
-# Manual standardscaler
+# 1.4- Manual standardscaler
 def manual_standardize(df, columns):
      for col, stats in columns.items():
          mean = stats["mean"]
@@ -101,16 +80,9 @@ def manual_standardize(df, columns):
          df[col] = (np.array(df) - mean) / std
      return df
 
-# ------------------------------
-st.title("🤖 Machine Learning")
-
 # --------------------------------
-# 12- Churn prediction BY FILL FIELDS
+# 1.5- Churn prediction BY FILL FIELDS
 def make_data_encoded(data):
-    # ['TypeCompte', 'MontantTrans', 'TypeTransaction', 'ScoreCSAT',
-    #    'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'Ville', 'MontantPret',
-    #    'TauxInteret', 'TypeEngagement']
-
     # Type account ------------------------
     if data["TypeCompte"] == "Compte Courant":
         data["TypeCompte"] = 1 
@@ -142,17 +114,86 @@ def make_data_encoded(data):
         if data["Ville"] == ville:
             data["Ville"] = i
 
+# --------------------------------
+# 1.6- Churn prediction by uploading csv file
+def get_file_extension(file_path):
+    _, extension = os.path.splitext(file_path.name)
+    return f"{extension}"
 
-# Scalling input data
-columns_params = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
-         'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
-         'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
-         'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
-         'AgeClient':{"mean":4.693210, "std":3.337875}, 
-         'MontantPret': {"mean":0.502908, "std":0.572779}, 
-         'TauxInteret': {"mean": 0.495658, "std":0.499983}}
+# --------------------------------
+# 1.7- Making churn prediction
+def making_prediction(df_churn):
+    try:
+        prediction_results = []
+        for i in range(0, int(df_churn.shape[0])):
+                new_data = df_churn.iloc[i]
+                prediction = churn_model.predict([new_data])
+                prediction_results.append(prediction)
+                
+        df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()})
+        # Create a new column 'Classification' based on the 'Prediction' column
+        df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
+        # Count the occurrences of each classification
+        classification_counts = df_pred['Classification'].value_counts()
+        classification_counts = pd.DataFrame(classification_counts)
 
-# 13- Fields for churn prediction
+        # ------------------------
+        # Result
+        col1, col2 = st.columns(2)
+        with col1:
+                st.write(classification_counts["count"])
+        with col2:
+                st.bar_chart(classification_counts)
+    
+    except ValueError as e:
+        st.error(f"Prediction error: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
+
+# --------------------------------------------
+# 1.8- Preparing data to churn prediction 
+def prepare_data_and_predict(df_uploaded):
+    # Virify whether all columns in column_list are present in the dataset
+    missing_columns = [col for col in all_columns if col not in df_uploaded.columns]
+    if missing_columns:
+            st.error(f"The following columns are missing in the dataset: {missing_columns}")
+    else:
+              st.write(df_uploaded.head(3))
+              # shape of date
+              st.write(f"**Data size**: {df_uploaded.shape[0]}")
+              st.header("Result of Churn prediction", divider=True)
+              # accept the prediction whether the dataset'size is more than 1
+              if df_uploaded.shape[0] > 2 : #and  df_uploaded.shape[0] > 0:
+                     # Remove columns not in the list
+                     df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
+                     # Encoding the data using labelencoder
+                     df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
+                     df_churn = df_churn[0:3]
+                     # Scaling the data using standardscaler
+                     try:
+                            df_churn = manual_standardize(df_churn, columns=columns_params)
+                            # make prediction
+                            making_prediction(df_churn)
+                     except:
+                            st.write("304- There is an error")
+    
+
+# ---------------------------------
+#   II- M O D E L
+# ---------------------------------
+# 2.1- SAVING MODEL
+model_path = './model/churn_model.pkl'
+
+# 2.2- To load the model later:
+churn_model = pickle.load(open(model_path, 'rb'))
+
+
+# ---------------------------------
+#   III- A P P L I C A T I O N
+# ---------------------------------
+st.title("🤖 Machine Learning")
+
+# 3.1- Fields for churn prediction
 with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
        
        st.write("#### Input Data")
@@ -214,8 +255,8 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
                testing_model_by_ilocation(data=input_df)
 
 
-import numpy as np
-
+# -----------------------------
+# Manual standard scaler
 class ManualStandardScaler:
     def __init__(self, mean=None, std=None, with_mean=True, with_std=True):
         self.with_mean = with_mean  # Option to center the data
@@ -258,88 +299,6 @@ scaler = ManualStandardScaler(mean=[4, 5, 6], std=[2, 2, 2])
 scaled_data = scaler.fit_transform(data)
 
 
-# --------------------------------
-# 14- Churn prediction by uploading csv file
-import os
-
-def get_file_extension(file_path):
-    _, extension = os.path.splitext(file_path.name)
-    return f"{extension}"
-
-# Visualization
-def make_visualization(data):
-    making_scaler_standardscaler(data)
-    p = figure(title="Montant de transaction par ville", x_axis_label="Ville", y_axis_label="Montant Transaction")
-
-    X_data = data["Ville"]
-    Y_data = data["MontantTrans"]
-    p.line(X_data, Y_data, legend_label="Trend", line_width=2)
-    chart_data = data["MontantTrans"]
-    st.bar_chart(chart_data)
-
-def making_prediction(df_churn):
-       try:
-              prediction_results = []
-              for i in range(0, int(df_churn.shape[0])):
-                     new_data = df_churn.iloc[i]
-                     prediction = churn_model.predict([new_data])
-                     prediction_results.append(prediction)
-                     
-              df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()})
-              # Create a new column 'Classification' based on the 'Prediction' column
-              df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
-              # Count the occurrences of each classification
-              classification_counts = df_pred['Classification'].value_counts()
-              classification_counts = pd.DataFrame(classification_counts)
-
-              # ------------------------
-              # Result
-              col1, col2 = st.columns(2)
-              with col1:
-                     st.write(classification_counts["count"])
-              with col2:
-                     st.bar_chart(classification_counts)
-       
-       except ValueError as e:
-              st.error(f"Prediction error: {e}")
-       except Exception as e:
-              st.error(f"An unexpected error occurred: {e}")
-
-
-# ----------------------------------
-# columns to be scaling
-columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
-# columns to be encoded
-columns_to_encoded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
-# all columns
-all_columns = columns_to_scaled + columns_to_encoded
-
-# Function: prepare data to churn prediction 
-def prepare_data(df_uploaded):
-       # Virify whether all columns in column_list are present in the dataset
-       missing_columns = [col for col in all_columns if col not in df_uploaded.columns]
-       if missing_columns:
-              st.error(f"The following columns are missing in the dataset: {missing_columns}")
-       else:
-              st.write(df_uploaded.head(3))
-              # shape of date
-              st.write(f"**Data size**: {df_uploaded.shape[0]}")
-              st.header("Result of Churn prediction", divider=True)
-              # accept the prediction whether the dataset'size is more than 1
-              if df_uploaded.shape[0] > 2 : #and  df_uploaded.shape[0] > 0:
-                     # Remove columns not in the list
-                     df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
-                     # Encoding the data using labelencoder
-                     df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
-                     df_churn = df_churn[0:3]
-                     # Scaling the data using standardscaler
-                     try:
-                            df_churn = manual_standardize(df_churn, columns=columns_params)
-                            # make prediction
-                            making_prediction(df_churn)
-                     except:
-                            st.write("304- There is an error")
-    
 
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        st.write("#### File uploader")
@@ -347,10 +306,10 @@ with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
        if df_uploaded:
                if get_file_extension(df_uploaded) == ".csv":
                      df_uploaded = pd.read_csv(df_uploaded)
-                     prepare_data(df_uploaded)
+                     prepare_data_and_predict(df_uploaded)
                elif get_file_extension(df_uploaded) == ".xlsx":
                      df_uploaded = pd.read_excel(df_uploaded)
-                     prepare_data(df_uploaded)
+                     prepare_data_and_predict(df_uploaded)
                      
                else:
                      st.error("#### Make sure you had uploaded csv or excel file")
