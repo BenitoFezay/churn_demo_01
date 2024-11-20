@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-# import plotly.express as px
+import xgboost as xgb
 
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
@@ -36,20 +36,24 @@ columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', '
 columns_to_encoded = ['TypeCompte', 'TypeTransaction', 'Ville', 'TypeEngagement']
 # all columns
 all_columns = columns_to_scaled + columns_to_encoded
+# dataset exapmle
+data_exampler = pd.read_csv('./data/df_test.csv')
+
 
 # ------------------------------------- 
 #          II- F U N C T I O N S
 # -------------------------------------
 # 1.1- Encoding the data using labelencoder
 def make_encoding_labelencoder(df, columns):
-       label_encoder = LabelEncoder()
-       for col in columns:
-              df[col] = label_encoder.fit_transform(df[col])
-       return df
+    label_encoder = LabelEncoder()
+    for col in columns:
+        df[col] = label_encoder.fit_transform(df[col])
+    return df
 
 # -------------------------------
 # 1.2- Scalling data with StandardScaler
 scaler = StandardScaler()
+# columns to be scaled
 columns = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
 def making_scaler_standardscaler(df):
        df[columns] = scaler.fit_transform(df[columns])
@@ -58,61 +62,66 @@ def making_scaler_standardscaler(df):
 
 # -------------------------------
 # 1.3- TESTING THE MODEL
-def testing_model_by_ilocation(data):
+def prediction_one_line_data(data):
     # new_data = X_test.iloc[data]  # Example: Use the first row of X_test for testing
     prediction = churn_model.predict(data)
-    print(f"Prediction for the new data point: {prediction}")
 
     if f"{prediction}" == "[1]":
-        # st.write(new_data)
-        return st.error("This Client is churner")
+        return "Churner"
     else:
-        # st.write(new_data)
-        return st.success("This Client is loyal")
+        return "Loyal"
 
 # -----------------------------
 # 1.4- Manual standardscaler
 def manual_standardize(df, columns):
-     for col, stats in columns.items():
-         mean = stats["mean"]
-         std = stats["std"]
-         # Standardiser la colonne en utilisant la formule
-         df[col] = (np.array(df) - mean) / std
-     return df
+    # verify the size of data
+    if df.shape[0] > 0 and df.shape[0] < 2: 
+        for col, stats in columns.items():
+            mean = stats["mean"]
+            std = stats["std"]
+            # Standardiser la colonne en utilisant la formule
+            df[col] = (np.array(df) - mean) / std
+        return df
+    elif df.shape[0] > 1:
+        df_0 = df.loc[0]
+        for col, stats in columns.items():
+            mean = stats["mean"]
+            std = stats["std"]
+            # Standardiser la colonne en utilisant la formule
+            df_0[col] = (df.loc[0, col] - mean) / std
+        df_0 = pd.DataFrame(df_0).transpose()
+
+        for i in range(1, df.shape[0]):
+            df_1 = df.loc[i]
+            for col, stats in columns.items():
+                mean = stats["mean"]
+                std = stats["std"]
+                # Standardiser la colonne en utilisant la formule
+                df_1[col] = (df.loc[i, col] - mean) / std
+
+            df_1 = pd.DataFrame(df_1).transpose()
+            df_0 = pd.concat([df_0, df_1])
+        return df_0
 
 # --------------------------------
 # 1.5- Churn prediction BY FILL FIELDS
 def make_data_encoded(data):
+    data = pd.DataFrame(data, index=[0])
     # Type account ------------------------
-    if data["TypeCompte"] == "Compte Courant":
-        data["TypeCompte"] = 1 
-    else:
-        data["TypeCompte"] = 0 
+    data["TypeCompte"] = data["TypeCompte"].map({"Compte Courant": 0, "Compte Épargne": 1})  
 
     # Type engagement ---------------------
-    if data["TypeEngagement"] == "Utilisation d'application mobile":
-        data["TypeEngagement"] = 0
-    else:
-        data["TypeEngagement"] = 1
+    data["TypeEngagement"] = data["TypeEngagement"].map({"Utilisation d'application mobile": 0, "Participation Programme Fidélité": 1})
 
     # Type transaction --------------------
-    if data["TypeTransaction"] == "Paiement":
-        data["TypeTransaction"] = 0
-    elif data["TypeTransaction"] == "Retrait":
-        data["TypeTransaction"] = 1
-    elif data["TypeTransaction"] == "Virement":
-        data["TypeTransaction"] = 2
-    else:
-        data["TypeTransaction"] = 3
+    data["TypeTransaction"] = data["TypeTransaction"].map({'Depot': 0,'Paiement': 1, 'Retrait': 2, 'Virement': 3})
 
     # Ville --------------------------------
-    villes = ['Antsohihy', 'Ambanja', 'Antananarivo', 'Ihosy', 'Toliara',
-       'Antsiranana', 'Fianarantsoa', 'Toamasina', 'Fort Dauphin',
-       'Mahajanga', 'Andapa', 'Ambovombe', 'Morondava', 'Nosy Be'] 
-
-    for i, ville in enumerate(villes):
-        if data["Ville"] == ville:
-            data["Ville"] = i
+    data["Ville"] = data["Ville"].map({'Antsohihy':0, 'Ambanja':1, 'Antananarivo':2, 'Ihosy':3, 'Toliara':4,
+       'Antsiranana':5, 'Fianarantsoa':6, 'Toamasina':7, 'Fort Dauphin':8,
+       'Mahajanga':9, 'Andapa':10, 'Ambovombe':11, 'Morondava':12, 'Nosy Be':13})
+    
+    return data
 
 # --------------------------------
 # 1.6- Churn prediction by uploading csv file
@@ -158,24 +167,36 @@ def prepare_data_and_predict(df_uploaded):
     if missing_columns:
             st.error(f"The following columns are missing in the dataset: {missing_columns}")
     else:
-              st.write(df_uploaded.head(3))
-              # shape of date
-              st.write(f"**Data size**: {df_uploaded.shape[0]}")
-              st.header("Result of Churn prediction", divider=True)
-              # accept the prediction whether the dataset'size is more than 1
-              if df_uploaded.shape[0] > 2 : #and  df_uploaded.shape[0] > 0:
-                     # Remove columns not in the list
-                     df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
-                     # Encoding the data using labelencoder
-                     df_churn = make_encoding_labelencoder(df_churn, columns_to_encoded)
-                     df_churn = df_churn[0:3]
-                     # Scaling the data using standardscaler
-                     try:
-                            df_churn = manual_standardize(df_churn, columns=columns_params)
-                            # make prediction
-                            making_prediction(df_churn)
-                     except:
-                            st.write("304- There is an error")
+        st.write(df_uploaded.head(3))
+        # shape of date
+        st.write(f"**Data size**: {df_uploaded.shape[0]}")
+        st.header("Result of Churn prediction", divider=True)
+        # accept the prediction whether the dataset'size is more than 1
+        if df_uploaded.shape[0] > 0: #and  df_uploaded.shape[0] > 0:
+            # Remove columns not in the list
+            df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
+            if df_churn.shape[0] == 1:
+                # encoding the data manualy
+                try:
+                    df_churn = make_data_encoded(data=df_churn)
+                except:
+                    pass
+                # scaling the data using standardscaler
+                df_churn = manual_standardize(df_churn, columns=columns_params)
+                # filtered columns
+                filtered_columns = ['TypeCompte', 'MontantTrans', 'TypeTransaction', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'Ville', 'MontantPret', 'TauxInteret', 'TypeEngagement']
+                # procede to prediction
+                result_prediction = prediction_one_line_data(df_churn[filtered_columns])
+                if result_prediction == "Churner":
+                    st.error("This Client is churner")
+                else:
+                    st.success("This Client is loyal")
+                    
+            else:
+                # making_prediction(df_churn)
+                st.info("### Can't support the multiple lines of data for now.")
+            # except:
+                # st.write("304- There is an error")
     
 
 # ---------------------------------
@@ -193,126 +214,87 @@ churn_model = pickle.load(open(model_path, 'rb'))
 # ---------------------------------
 st.title("🤖 Machine Learning")
 
-# 3.1- Fields for churn prediction
+# ------------------------------
+#  PREDICTION BY FILLING FIELDS
+# ------------------------------
 with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
-       
-       st.write("#### Input Data")
-       with st.form(key="Churn_form"):
+    st.write("#### Input Data")
+    with st.form(key="Churn_form"):
+        col1, col2, col3 = st.columns(3)
+        # montant_transaction
+        transaction_amount = col1.number_input("Montant Transaction (ar)", min_value=2_000, value=450_000)
+        # Score_csat
+        score_csat = col1.slider('Score CSAT client', 0, 10, 3)
+        # Montant pret
+        loan_amount = col1.number_input("Montant pret", min_value=0, value=0)
+        # taux d'interet
+        taux_interet = col2.slider("Taux d'interet", 0.00, 5.00, 3.12)
+        # age compte 
+        age_compte = col2.number_input("Age compte (j)", min_value=3, value=2300)
+        # scorre nps
+        score_nps = col2.slider('Score NPS client', 0, 10, 3)
+        # type compte
+        type_account = col3.selectbox('Type de Compte', ('Compte Courant', 'Compte Épargne'))
+        # type engagement
+        type_engagement = col3.selectbox("Type d'engagement", ('Utilisation application mobile', 'Participation de programme de fidelité'))
+        # type transaction
+        type_transaction = col3.selectbox("Type de Transaction", ('Virement', 'Paiement' ,'Retrait', 'Depôt'))
+        # age client
+        age_client = col3.slider('Age client', 18, 100, 47)
+        # ville
+        ville = col2.selectbox("Adresse", ('Antsohihy', 'Ambanja', 'Antananarivo', 'Ihosy', 'Toliara',
+        'Antsiranana', 'Fianarantsoa', 'Toamasina', 'Fort Dauphin',
+        'Mahajanga', 'Andapa', 'Ambovombe', 'Morondava', 'Nosy Be'))
+        # button submit
+        submit_button = st.form_submit_button(label="Valide & predict") 
+
+
+        data = {
+        "TypeCompte": type_account,
+        'MontantTrans': transaction_amount, 
+        'TypeTransaction': type_transaction, 
+        'ScoreCSAT': score_csat,
+        'ScoreNPS': score_nps, 
+        'AgeCompte (j)': age_compte, 
+        'AgeClient': age_client, 
+        'Ville': ville, 
+        'MontantPret': loan_amount,
+        'TauxInteret': taux_interet, 
+        'TypeEngagement': type_engagement
+        }
         
-              col1, col2, col3 = st.columns(3)
-              # montant_transaction
-              transaction_amount = col1.number_input("Montant Transaction (ar)", min_value=2_000, value=450_000)
-              # Score_csat
-              score_csat = col1.slider('Score CSAT client', 0, 10, 3)
-              # Montant pret
-              loan_amount = col1.number_input("Montant pret", min_value=0, value=0)
-              # taux d'interet
-              taux_interet = col2.slider("Taux d'interet", 0.00, 5.00, 3.12)
-              # age compte 
-              age_compte = col2.number_input("Age compte (j)", min_value=3, value=2300)
-              # scorre nps
-              score_nps = col2.slider('Score NPS client', 0, 10, 3)
-              # type compte
-              type_account = col3.selectbox('Type de Compte', ('Compte Courant', 'Compte Épargne'))
-              # type engagement
-              type_engagement = col3.selectbox("Type d'engagement", ('Utilisation application mobile', 'Participation de programme de fidelité'))
-              # type transaction
-              type_transaction = col3.selectbox("Type de Transaction", ('Virement', 'Paiement' ,'Retrait', 'Depôt'))
-              # age client
-              age_client = col3.slider('Age client', 18, 100, 47)
-              # ville
-              ville = col2.selectbox("Adresse", ('Antsohihy', 'Ambanja', 'Antananarivo', 'Ihosy', 'Toliara',
-               'Antsiranana', 'Fianarantsoa', 'Toamasina', 'Fort Dauphin',
-               'Mahajanga', 'Andapa', 'Ambovombe', 'Morondava', 'Nosy Be'))
-              # button submit
-              submit_button = st.form_submit_button(label="Valide & predict") 
+        data = make_data_encoded(data=data)
         
+        if submit_button:
+            df = pd.DataFrame(data, index=[0])
+            input_df = df.copy()
+            # input_df
+            input_df = manual_standardize(input_df, columns=columns_params)
+            result_prediction = prediction_one_line_data(data=input_df)
+            if result_prediction == "Churner":
+                st.error("This Client is churner")
+            else:
+                st.success("This Client is loyal")
+                
+            
 
-              data = {
-               "TypeCompte": type_account,
-               'MontantTrans': transaction_amount, 
-               'TypeTransaction': type_transaction, 
-               'ScoreCSAT': score_csat,
-               'ScoreNPS': score_nps, 
-               'AgeCompte (j)': age_compte, 
-               'AgeClient': age_client, 
-               'Ville': ville, 
-               'MontantPret': loan_amount,
-               'TauxInteret': taux_interet, 
-               'TypeEngagement': type_engagement
-              }
-              
-              make_data_encoded(data=data)
-              
-              if submit_button:
-               df = pd.DataFrame(data, index=[0])
-               # with st.expander('Input features'):
-               # st.write('**Input data before scalling**')
-               input_df = df.copy()
-               # input_df
-               input_df = manual_standardize(input_df, columns=columns_params)
-              
-               testing_model_by_ilocation(data=input_df)
-
-
-# -----------------------------
-# Manual standard scaler
-class ManualStandardScaler:
-    def __init__(self, mean=None, std=None, with_mean=True, with_std=True):
-        self.with_mean = with_mean  # Option to center the data
-        self.with_std = with_std    # Option to scale to unit variance
-        self.mean = mean            # Custom mean value
-        self.std = std              # Custom standard deviation value
-        self.mean_ = None
-        self.std_ = None
-
-    def fit(self, data):
-        # Use provided mean and std if specified, otherwise compute from data
-        if self.mean is not None:
-            self.mean_ = np.array(self.mean)
-        elif self.with_mean:
-            self.mean_ = np.mean(data, axis=0)
-        else:
-            self.mean_ = np.zeros(data.shape[1])
-
-        if self.std is not None:
-            self.std_ = np.array(self.std)
-        elif self.with_std:
-            self.std_ = np.std(data, axis=0)
-            self.std_[self.std_ == 0] = 1  # Avoid division by zero
-        else:
-            self.std_ = np.ones(data.shape[1])
-
-    def transform(self, data):
-        # Scale the data based on provided or computed mean and std
-        return (data - self.mean_) / self.std_
-
-    def fit_transform(self, data):
-        self.fit(data)
-        return self.transform(data)
-
-# Example usage
-data = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])  # Sample dataset
-
-# Use custom mean and std values
-scaler = ManualStandardScaler(mean=[4, 5, 6], std=[2, 2, 2])
-scaled_data = scaler.fit_transform(data)
-
-
-
+# ------------------------------
+#  PREDICTION BY UPLOADIND FILE
+# ------------------------------
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
-       st.write("#### File uploader")
-       df_uploaded = st.file_uploader(label=f"Upload the dataset here the dataset should have these columns \n {all_columns}.")
-       if df_uploaded:
-               if get_file_extension(df_uploaded) == ".csv":
-                     df_uploaded = pd.read_csv(df_uploaded)
-                     prepare_data_and_predict(df_uploaded)
-               elif get_file_extension(df_uploaded) == ".xlsx":
-                     df_uploaded = pd.read_excel(df_uploaded)
-                     prepare_data_and_predict(df_uploaded)
-                     
-               else:
-                     st.error("#### Make sure you had uploaded csv or excel file")
+    st.write("***Your data have to content some columns(11) like this :***")
+    st.dataframe(data_exampler)
+    df_uploaded = st.file_uploader(label="Upload the dataset here")
+    if df_uploaded:
+        if get_file_extension(df_uploaded) == ".csv":
+            df_uploaded = pd.read_csv(df_uploaded)
+            prepare_data_and_predict(df_uploaded)
+        elif get_file_extension(df_uploaded) == ".xlsx":
+            df_uploaded = pd.read_excel(df_uploaded)
+            prepare_data_and_predict(df_uploaded)
+                
+        else:
+            st.error("#### Make sure you had uploaded csv or excel file")
 
 
 
