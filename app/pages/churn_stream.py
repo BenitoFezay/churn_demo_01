@@ -30,6 +30,8 @@ columns_params = {'MontantTrans': {"mean":0.015519 , "std": 0.554258},
          'TauxInteret': {"mean": 0.495658, "std":0.499983}}
 
 # -------------------------------------
+# filtered columns
+filtered_columns = ['TypeCompte', 'MontantTrans', 'TypeTransaction', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'Ville', 'MontantPret', 'TauxInteret', 'TypeEngagement']
 # columns to be scaling
 columns_to_scaled = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
 # columns to be encoded
@@ -73,9 +75,9 @@ def prediction_one_line_data(data):
 
 # -----------------------------
 # 1.4- Manual standardscaler
-def manual_standardize(df, columns):
+def manual_standardscaler(df, columns):
     # verify the size of data
-    if df.shape[0] > 0 and df.shape[0] < 2: 
+    if df.shape[0] == 1: 
         for col, stats in columns.items():
             mean = stats["mean"]
             std = stats["std"]
@@ -104,9 +106,10 @@ def manual_standardize(df, columns):
         return df_0
 
 # --------------------------------
-# 1.5- Churn prediction BY FILL FIELDS
-def make_data_encoded(data):
-    data = pd.DataFrame(data, index=[0])
+# 1.5- Manual encoding data
+def make_data_encoded(data, is_one_line=True):
+    if is_one_line:
+        data = pd.DataFrame(data, index=[0])
     # Type account ------------------------
     data["TypeCompte"] = data["TypeCompte"].map({"Compte Courant": 0, "Compte Épargne": 1})  
 
@@ -131,19 +134,15 @@ def get_file_extension(file_path):
 
 # --------------------------------
 # 1.7- Making churn prediction
-def making_prediction(df_churn):
+def prediction_multi_lines(df_churn):
     try:
-        prediction_results = []
-        for i in range(0, int(df_churn.shape[0])):
-                new_data = df_churn.iloc[i]
-                prediction = churn_model.predict([new_data])
-                prediction_results.append(prediction)
-                
+        prediction_results = churn_model.predict(df_churn[filtered_columns])
         df_pred = pd.DataFrame({'Prediction': np.array(prediction_results).flatten()})
         # Create a new column 'Classification' based on the 'Prediction' column
         df_pred['Classification'] = df_pred['Prediction'].map({1: 'Churner', 0: 'Loyal'})
         # Count the occurrences of each classification
         classification_counts = df_pred['Classification'].value_counts()
+        # classification_counts = df_pred['Prediction'].value_counts()
         classification_counts = pd.DataFrame(classification_counts)
 
         # ------------------------
@@ -172,7 +171,7 @@ def prepare_data_and_predict(df_uploaded):
         st.write(f"**Data size**: {df_uploaded.shape[0]}")
         st.header("Result of Churn prediction", divider=True)
         # accept the prediction whether the dataset'size is more than 1
-        if df_uploaded.shape[0] > 0: #and  df_uploaded.shape[0] > 0:
+        if df_uploaded.shape[0] > 0:
             # Remove columns not in the list
             df_churn = df_uploaded[[col for col in all_columns if col in df_uploaded.columns]]
             if df_churn.shape[0] == 1:
@@ -182,10 +181,8 @@ def prepare_data_and_predict(df_uploaded):
                 except:
                     pass
                 # scaling the data using standardscaler
-                df_churn = manual_standardize(df_churn, columns=columns_params)
-                # filtered columns
-                filtered_columns = ['TypeCompte', 'MontantTrans', 'TypeTransaction', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'Ville', 'MontantPret', 'TauxInteret', 'TypeEngagement']
-                # procede to prediction
+                df_churn = manual_standardscaler(df_churn, columns=columns_params)
+                # making prediction
                 result_prediction = prediction_one_line_data(df_churn[filtered_columns])
                 if result_prediction == "Churner":
                     st.error("This Client is churner")
@@ -193,10 +190,16 @@ def prepare_data_and_predict(df_uploaded):
                     st.success("This Client is loyal")
                     
             else:
-                # making_prediction(df_churn)
-                st.info("### Can't support the multiple lines of data for now.")
-            # except:
-                # st.write("304- There is an error")
+                # df_churn = df_churn[0:12000]
+                try:
+                    # manual encoding fata
+                    df_churn = make_data_encoded(data=df_churn, is_one_line=False)
+                    # making standard scaler
+                    df_churn = manual_standardscaler(df=df_churn, columns=columns_params)
+                    # making prediction
+                    prediction_multi_lines(df_churn)
+                except:
+                    st.info("###### Can't support the this data.")
     
 
 # ---------------------------------
@@ -210,7 +213,7 @@ churn_model = pickle.load(open(model_path, 'rb'))
 
 
 # ---------------------------------
-#   III- A P P L I C A T I O N
+#   A P P L I C A T I O N
 # ---------------------------------
 st.title("🤖 Machine Learning")
 
@@ -269,14 +272,13 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
             df = pd.DataFrame(data, index=[0])
             input_df = df.copy()
             # input_df
-            input_df = manual_standardize(input_df, columns=columns_params)
+            input_df = manual_standardscaler(input_df, columns=columns_params)
             result_prediction = prediction_one_line_data(data=input_df)
             if result_prediction == "Churner":
                 st.error("This Client is churner")
             else:
                 st.success("This Client is loyal")
                 
-            
 
 # ------------------------------
 #  PREDICTION BY UPLOADIND FILE
