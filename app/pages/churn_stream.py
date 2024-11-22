@@ -21,13 +21,13 @@ import pickle
 #         V A R I A B L E S
 # -------------------------------------
 # Scalling input data
-columns_params = {'MontantTrans': {"mean":0.015519 , "std": 0.554258}, 
-         'ScoreCSAT': {"mean":-0.101133 ,"std":0.572905}, 
-         'ScoreNPS': {"mean":0.054224, "std":0.567020}, 
-         'AgeCompte (j)': {"mean":-0.002555 , "std":0.584303}, 
-         'AgeClient':{"mean":4.693210, "std":3.337875}, 
-         'MontantPret': {"mean":0.502908, "std":0.572779}, 
-         'TauxInteret': {"mean": 0.495658, "std":0.499983}}
+columns_params = {'MontantTrans': {"mean":2.298365e+06 , "std": 1.502631e+06}, 
+         'ScoreCSAT': {"mean":5.381457 ,"std": 2.834845}, 
+         'ScoreNPS': {"mean":5.437009, "std":2.795327}, 
+         'AgeCompte (j)': {"mean":1342.523675, "std":1051.974388}, 
+         'AgeClient':{"mean":53.844637, "std":20.453082}, 
+         'MontantPret': {"mean":5.792726e+10, "std":7.356084e+10}, 
+         'TauxInteret': {"mean": 1.475264, "std":1.681651}}
 
 # -------------------------------------
 # filtered columns
@@ -54,18 +54,11 @@ def make_encoding_labelencoder(df, columns):
 
 # -------------------------------
 # 1.2- Scalling data with StandardScaler
-scaler = StandardScaler()
-# columns to be scaled
 columns = ['MontantTrans', 'ScoreCSAT', 'ScoreNPS', 'AgeCompte (j)', 'AgeClient', 'MontantPret', 'TauxInteret']
-def making_scaler_standardscaler(df):
-       df[columns] = scaler.fit_transform(df[columns])
-       return df
-
 
 # -------------------------------
 # 1.3- TESTING THE MODEL
 def prediction_one_line_data(data):
-    # new_data = X_test.iloc[data]  # Example: Use the first row of X_test for testing
     prediction = churn_model.predict(data)
 
     if f"{prediction}" == "[1]":
@@ -81,9 +74,13 @@ def manual_standardscaler(df, columns):
         for col, stats in columns.items():
             mean = stats["mean"]
             std = stats["std"]
-            # Standardiser la colonne en utilisant la formule
-            df[col] = (np.array(df) - mean) / std
+            try:
+                # Standardiser la colonne en utilisant la formule
+                df[col] = (np.array(df[col].values)[0] - mean) / std
+            except:
+                df[col] = (df[col].values - mean) / std
         return df
+
     elif df.shape[0] > 1:
         df_0 = df.loc[0]
         for col, stats in columns.items():
@@ -100,7 +97,6 @@ def manual_standardscaler(df, columns):
                 std = stats["std"]
                 # Standardiser la colonne en utilisant la formule
                 df_1[col] = (df.loc[i, col] - mean) / std
-
             df_1 = pd.DataFrame(df_1).transpose()
             df_0 = pd.concat([df_0, df_1])
         return df_0
@@ -190,7 +186,6 @@ def prepare_data_and_predict(df_uploaded):
                     st.success("This Client is loyal")
                     
             else:
-                # df_churn = df_churn[0:12000]
                 try:
                     # manual encoding fata
                     df_churn = make_data_encoded(data=df_churn, is_one_line=False)
@@ -239,7 +234,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
         # type compte
         type_account = col3.selectbox('Type de Compte', ('Compte Courant', 'Compte Épargne'))
         # type engagement
-        type_engagement = col3.selectbox("Type d'engagement", ('Utilisation application mobile', 'Participation de programme de fidelité'))
+        type_engagement = col3.selectbox("Type d'engagement", ("Utilisation d'application mobile", "Participation Programme Fidélité"))
         # type transaction
         type_transaction = col3.selectbox("Type de Transaction", ('Virement', 'Paiement' ,'Retrait', 'Depôt'))
         # age client
