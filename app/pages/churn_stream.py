@@ -7,6 +7,7 @@ import seaborn as sns
 import xgboost as xgb
 from datetime import date
 
+
 # SKLEARN
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.cluster import KMeans
@@ -212,12 +213,21 @@ model_path = './model/churn_model.pkl'
 # 2.2- To load the model later:
 churn_model = pickle.load(open(model_path, 'rb'))
 
+# 2.3- Feature importance
+# Assuming 'churn_model' is your trained XGBoost model
+# Get feature importances
+importance_types = ["gain", "weight", "cover"]
+
+# Convert feature importances to percentages
+importances = churn_model.get_booster().get_score(importance_type='gain')
+total_importance = sum(importances.values())
+percentage_importances = {feature: (importance / total_importance) * 100 for feature, importance in importances.items()}
 
 # ---------------------------------
 #   A P P L I C A T I O N
 # ---------------------------------
 st.title("🤖 Machine Learning")
-
+st.bar_chart(percentage_importances, x_label="Features importacne", y_label="Score")
 # ------------------------------
 #  PREDICTION BY FILLING FIELDS
 # ------------------------------
