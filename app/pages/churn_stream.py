@@ -5,8 +5,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import xgboost as xgb
+from datetime import date
 
+# SKLEARN
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
 
 # STREMLIT APP
 import streamlit as st
@@ -145,9 +150,10 @@ def prediction_multi_lines(df_churn):
         # Result
         col1, col2 = st.columns(2)
         with col1:
-                st.write(classification_counts["count"])
+            df_pred
+            # st.write(classification_counts["count"])
         with col2:
-                st.bar_chart(classification_counts)
+            st.bar_chart(classification_counts)
     
     except ValueError as e:
         st.error(f"Prediction error: {e}")
@@ -220,7 +226,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
     with st.form(key="Churn_form"):
         col1, col2, col3 = st.columns(3)
         # montant_transaction
-        transaction_amount = col1.number_input("Montant Transaction (ar)", min_value=2_000, value=450_000)
+        transaction_amount = col1.number_input("Montant Transaction (ar)", min_value=100, value=450_000)
         # Score_csat
         score_csat = col1.slider('Score CSAT client', 0, 10, 3)
         # Montant pret
@@ -279,7 +285,7 @@ with st.expander("CHURN PREDICTION - BY FILLING FIELDS"):
 #  PREDICTION BY UPLOADIND FILE
 # ------------------------------
 with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
-    st.write("***Your data have to content some columns(11) like this :***")
+    st.write("***Your data must content some columns(11) like this :***")
     st.dataframe(data_exampler)
     df_uploaded = st.file_uploader(label="Upload the dataset here")
     if df_uploaded:
@@ -294,6 +300,133 @@ with st.expander("CHURN PREDICTION - BY UPLOADIN FILE"):
             st.error("#### Make sure you had uploaded csv or excel file")
 
 
+# ------------------------------
+#   R F M   FUNCTIONS
+# ------------------------------
+# Get date min from date ouverture column
+def get_min__date_ouverture(df):
+    df["DateOuverture"] = pd.to_datetime(df["DateOuverture"])
+    min_date_ouverture = df.groupby('ClientID')['DateOuverture'].min()
+    return pd.DataFrame(min_date_ouverture)
+
+# ------------------------------
+# Get date max from date transaction
+def get_max_date_transaction(df):
+    df["DateTransaction"] = pd.to_datetime(df["DateTransaction"])
+    max_date_transactions = df.groupby('ClientID')['DateTransaction'].max()
+    return pd.DataFrame(max_date_transactions)
+
+# ------------------------------
+# Builde data RMF
+def prepare_rfm_data(df, min_date, max_date):
+    max_date_transactions = max_date.merge(min_date, on='ClientID', how='left')
+
+    rfm_df = max_date_transactions.copy()
+    rfm_df.rename(columns={'max': 'Transaction', 'DateOuverture': 'Ouverture'}, inplace=True)
+
+    return rfm_df
+
+# ------------------------------
+# Calculate Recency 
+def calculate_recency(rfm_df, date_transaction="2024-10-01"):
+    rfm_df['Transaction'] = pd.to_datetime(rfm_df['Transaction'])
+    rfm_df['Ouverture'] = pd.to_datetime(rfm_df['Ouverture'])
+
+    # Assuming last_date_transaction's date for calculating recency
+    last_date_transaction = pd.to_datetime(date_transaction)
+
+    # Calculate recency for each customer based on their most recent transaction
+    rfm_df['Recency'] = np.abs((last_date_transaction - rfm_df['Transaction']).dt.days / 30)
+
+    return rfm_df
 
 
-   
+# ------------------------------
+# Calculate Frequency
+def calculate_frequency(df, rfm_df, date_transaction="2024-10-01"):
+    date_transaction = pd.to_datetime(date_transaction)
+    # Calculate frequency for each customer (number of transactions)
+    K_times = df.groupby('ClientID')['DateTransaction'].count()
+
+    rfm_df["AgeCompte"] = (date_transaction - rfm_df['Ouverture']).dt.days / 30
+
+    # Add frequency to the rfm_df DataFrame
+    rfm_df = rfm_df.merge(K_times, on='ClientID', how='left')
+
+    # Rename the frequency column
+    rfm_df = rfm_df.rename(columns={'DateTransaction': 'K_times'})
+    rfm_df["Frequency"] = rfm_df["K_times"] / rfm_df["AgeCompte"]
+
+    rfm_df.drop(columns=['Transaction', 'Ouverture', "K_times", "AgeCompte"], axis=1, inplace=True)
+    return rfm_df
+
+
+# ------------------------------
+#  SEGMENTATION CLIENT
+# ------------------------------
+# with st.expander("SEGMENTATION CLIENT"):
+    # with st.form(key="segementation_client"):
+        # upload file
+        # segementation_data = st.file_uploader(label="Upload the dataset here", type=["csv"])
+        # last date transaction
+        # today = date.today()
+        # last_date_transaction = st.date_input("Last date transaction", today, format="DD/MM/YYYY")
+        # submit button
+        # submit_button = st.form_submit_button(label="Sbumit")
+
+    # Verify whether the data existe 
+    # if segementation_data and submit_button:
+        # Transforming data uploaded to data frame
+        # segementation_data = pd.read_csv(segementation_data)        
+        # df_client = pd.DataFrame(segementation_data)
+
+        # scaler = StandardScaler()
+        # rfm_df = calculate_frequency(df_client, last_date_transaction)
+        # rfm_df
+        # rfm_df[["Recency", "Frequency"]] = scaler.fit_transform(rfm_df[["Recency", "Frequency"]])
+
+        # def optimization_of_k(data, max_k):
+        #     mean_distortions = []
+        #     inertias = []
+
+        #     for k in range(1, max_k):
+        #         kmeans = KMeans(n_clusters=k)
+        #         kmeans.fit(data)
+
+        #         mean_distortions.append(kmeans.inertia_)
+        #         inertias.append(kmeans.inertia_)
+
+        #     # make plot
+        #     plt.plot(range(1, max_k), mean_distortions, marker='o')
+        #     plt.xlabel('Number of clusters')
+        #     plt.ylabel('Mean distortion')
+        #     plt.grid(True)
+        #     plt.show()
+
+        # optimization_of_k(rfm_df[["Recency", "Frequency"]], 10)
+
+        # kmeans = KMeans(n_clusters=4)
+        # kmeans.fit(rfm_df[["Recency", "Frequency"]])
+        # rfm_df['cluster_k'] = kmeans.labels_
+
+        # plt.scatter(x=rfm_df['Recency'], y=rfm_df['Frequency'], c=rfm_df['cluster_k'])
+        # plt.xlabel('Recency')
+        # plt.ylabel('Frequency')
+        # plt.title('K-means Clustering')
+        # plt.show()
+
+        # for k in range(2, 9):
+        #     kmeans = KMeans(n_clusters=k)
+        #     kmeans.fit(rfm_df[["Recency", "Frequency"]])
+        #     rfm_df[f'cluster_{k}'] = kmeans.labels_
+
+        # for k in range(2, 9):
+        #     plt.scatter(x=rfm_df['Recency'], y=rfm_df['Frequency'], c=rfm_df[f'cluster_{k}'])
+        #     plt.xlabel('Recency')
+        #     plt.ylabel('Frequency')
+        #     plt.title(f'K-means Clustering - {k}')
+        #     plt.show()
+
+        # for k in range(2, 9):
+        #     silhouette_avg = silhouette_score(rfm_df[["Recency", "Frequency"]], rfm_df[f'cluster_{k}'])
+        #     print(f"For n_clusters={k}, the silhouette_score is {silhouette_avg}")
