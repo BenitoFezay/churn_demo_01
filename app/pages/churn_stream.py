@@ -7,6 +7,8 @@ import seaborn as sns
 import xgboost as xgb
 from datetime import date
 
+# ALTAIR
+import altair as alt
 
 # SKLEARN
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -323,15 +325,20 @@ def get_min__date_ouverture(df):
 # Get date max from date transaction
 def get_max_date_transaction(df):
     df["DateTransaction"] = pd.to_datetime(df["DateTransaction"])
-    max_date_transactions = df.groupby('ClientID')['DateTransaction'].max()
+    max_date_transactions = df.groupby('ClientID')['DateTransaction'].agg(['max'])
     return pd.DataFrame(max_date_transactions)
 
 # ------------------------------
 # Builde data RMF
-def prepare_rfm_data(df, min_date, max_date):
-    max_date_transactions = max_date.merge(min_date, on='ClientID', how='left')
+def prepare_rfm_data(min_date, max_date):
+    # Make sure the data should be a data frame
+    # min_date = pd.DataFrame(min_date)
+    max_date = pd.DataFrame(max_date)
+    # Merge the de min - max data
+    max_date = max_date.merge(min_date, on='ClientID', how='left')
 
-    rfm_df = max_date_transactions.copy()
+    rfm_df = max_date.copy()
+    # Rename some columns
     rfm_df.rename(columns={'max': 'Transaction', 'DateOuverture': 'Ouverture'}, inplace=True)
 
     return rfm_df
@@ -354,8 +361,11 @@ def calculate_recency(rfm_df, date_transaction="2024-10-01"):
 # ------------------------------
 # Calculate Frequency
 def calculate_frequency(df, rfm_df, date_transaction="2024-10-01"):
+    rfm_df['Transaction'] = pd.to_datetime(rfm_df['Transaction'])
+    rfm_df['Ouverture'] = pd.to_datetime(rfm_df['Ouverture'])
+
     date_transaction = pd.to_datetime(date_transaction)
-    # Calculate frequency for each customer (number of transactions)
+# ------------------------------------------------------------------------
     K_times = df.groupby('ClientID')['DateTransaction'].count()
 
     rfm_df["AgeCompte"] = (date_transaction - rfm_df['Ouverture']).dt.days / 30
@@ -365,78 +375,64 @@ def calculate_frequency(df, rfm_df, date_transaction="2024-10-01"):
 
     # Rename the frequency column
     rfm_df = rfm_df.rename(columns={'DateTransaction': 'K_times'})
+
     rfm_df["Frequency"] = rfm_df["K_times"] / rfm_df["AgeCompte"]
 
-    rfm_df.drop(columns=['Transaction', 'Ouverture', "K_times", "AgeCompte"], axis=1, inplace=True)
     return rfm_df
 
 
 # ------------------------------
 #  SEGMENTATION CLIENT
 # ------------------------------
-# with st.expander("SEGMENTATION CLIENT"):
-    # with st.form(key="segementation_client"):
+with st.expander("SEGMENTATION CLIENT"):
+    with st.form(key="segementation_client"):
         # upload file
-        # segementation_data = st.file_uploader(label="Upload the dataset here", type=["csv"])
+        segementation_data = st.file_uploader(label="Upload the dataset here", type=["csv"])
         # last date transaction
-        # today = date.today()
-        # last_date_transaction = st.date_input("Last date transaction", today, format="DD/MM/YYYY")
+        today = date.today()
+        last_date_transaction = st.date_input("Last date transaction", today, format="DD/MM/YYYY")
         # submit button
-        # submit_button = st.form_submit_button(label="Sbumit")
+        submit_button = st.form_submit_button(label="Sbumit")
 
     # Verify whether the data existe 
-    # if segementation_data and submit_button:
+    if segementation_data and submit_button:
         # Transforming data uploaded to data frame
-        # segementation_data = pd.read_csv(segementation_data)        
-        # df_client = pd.DataFrame(segementation_data)
+        segementation_data = pd.read_csv(segementation_data)        
+        df_client = pd.DataFrame(segementation_data)
 
-        # scaler = StandardScaler()
-        # rfm_df = calculate_frequency(df_client, last_date_transaction)
-        # rfm_df
-        # rfm_df[["Recency", "Frequency"]] = scaler.fit_transform(rfm_df[["Recency", "Frequency"]])
+        min_date_ouverture = get_min__date_ouverture(df_client)
+        max_date_transaction = get_max_date_transaction(df_client)
 
-        # def optimization_of_k(data, max_k):
-        #     mean_distortions = []
-        #     inertias = []
+        rfm_df = prepare_rfm_data(min_date=min_date_ouverture, max_date=max_date_transaction)
 
-        #     for k in range(1, max_k):
-        #         kmeans = KMeans(n_clusters=k)
-        #         kmeans.fit(data)
+        scaler = StandardScaler()
+        df_recency = calculate_recency(rfm_df)
+        
+        rfm_df = calculate_frequency(df=df_client, rfm_df=df_recency)
+        rfm_df[["Recency", "Frequency"]] = scaler.fit_transform(rfm_df[["Recency", "Frequency"]])
+        rfm_df[["Recency", "Frequency"]] = scaler.inverse_transform(rfm_df[["Recency", "Frequency"]])
+        def optimization_of_k(data, max_k):
+            mean_distortions = []
+            inertias = []
 
-        #         mean_distortions.append(kmeans.inertia_)
-        #         inertias.append(kmeans.inertia_)
+            for k in range(1, max_k):
+                kmeans = KMeans(n_clusters=k)
+                kmeans.fit(data)
 
-        #     # make plot
-        #     plt.plot(range(1, max_k), mean_distortions, marker='o')
-        #     plt.xlabel('Number of clusters')
-        #     plt.ylabel('Mean distortion')
-        #     plt.grid(True)
-        #     plt.show()
+                mean_distortions.append(kmeans.inertia_)
+                inertias.append(kmeans.inertia_)
 
-        # optimization_of_k(rfm_df[["Recency", "Frequency"]], 10)
+        optimization_of_k(rfm_df[["Recency", "Frequency"]], 6)
 
-        # kmeans = KMeans(n_clusters=4)
-        # kmeans.fit(rfm_df[["Recency", "Frequency"]])
-        # rfm_df['cluster_k'] = kmeans.labels_
+        kmeans = KMeans(n_clusters=5)
+        kmeans.fit(rfm_df[["Recency", "Frequency"]])
+        rfm_df['cluster_k'] = kmeans.labels_
 
-        # plt.scatter(x=rfm_df['Recency'], y=rfm_df['Frequency'], c=rfm_df['cluster_k'])
-        # plt.xlabel('Recency')
-        # plt.ylabel('Frequency')
-        # plt.title('K-means Clustering')
-        # plt.show()
+        chart = alt.Chart(rfm_df).mark_circle().encode(
+            x='Recency',
+            y='Frequency',
+            color='cluster_k',
+            # tooltip=['Montant', 'Recency', 'Frequency']
+        ).interactive()
 
-        # for k in range(2, 9):
-        #     kmeans = KMeans(n_clusters=k)
-        #     kmeans.fit(rfm_df[["Recency", "Frequency"]])
-        #     rfm_df[f'cluster_{k}'] = kmeans.labels_
-
-        # for k in range(2, 9):
-        #     plt.scatter(x=rfm_df['Recency'], y=rfm_df['Frequency'], c=rfm_df[f'cluster_{k}'])
-        #     plt.xlabel('Recency')
-        #     plt.ylabel('Frequency')
-        #     plt.title(f'K-means Clustering - {k}')
-        #     plt.show()
-
-        # for k in range(2, 9):
-        #     silhouette_avg = silhouette_score(rfm_df[["Recency", "Frequency"]], rfm_df[f'cluster_{k}'])
-        #     print(f"For n_clusters={k}, the silhouette_score is {silhouette_avg}")
+        st.altair_chart(chart, theme="streamlit", use_container_width=True)
